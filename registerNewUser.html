@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="myApp">
+<head>
+    <meta charset="UTF-8">
+    <title>Register new user</title>
+    <link rel="stylesheet" href="include/bootstrap.min.css">
+    <link rel="stylesheet" href="include/animate.css">
+    <link rel="stylesheet" href="include/materialize.css">
+    <link rel="stylesheet" href="include/googlepis.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css">
+    <script src="include/jquery.min.js"></script>
+    <script src="include/mfs100-9.0.2.6.js"></script>
+    <script src="include/angular.min.js"></script>
+    <script src="include/materialize.js"></script>
+    <style>
+        ::placeholder {color: #009688}
+        :-ms-input-placeholder {color: #009688}
+        ::-ms-input-placeholder {color: #009688}
+        input, textarea, button {
+            -webkit-appearance: none;
+            -webkit-font-smoothing: antialiased;
+            resize: none;
+        }
+    </style>
+    <script language="javascript" type="text/javascript">
+
+        var quality = 60; //(1 to 100) (recommanded minimum 55)
+        var timeout = 10; // seconds (minimum=10(recommanded), maximum=60, unlimited=0 )
+
+        function GetInfo() {
+            document.getElementById('tdSerial').innerHTML = "";
+            document.getElementById('tdCertification').innerHTML = "";
+            document.getElementById('tdMake').innerHTML = "";
+            document.getElementById('tdModel').innerHTML = "";
+            document.getElementById('tdWidth').innerHTML = "";
+            document.getElementById('tdHeight').innerHTML = "";
+            document.getElementById('tdLocalMac').innerHTML = "";
+            document.getElementById('tdLocalIP').innerHTML = "";
+            document.getElementById('tdSystemID').innerHTML = "";
+            document.getElementById('tdPublicIP').innerHTML = "";
+
+
+            var key = document.getElementById('txtKey').value;
+
+            var res;
+            if (key.length == 0) {
+                res = GetMFS100Info();
+            }
+            else {
+                res = GetMFS100KeyInfo(key);
+            }
+
+            if (res.httpStaus) {
+
+                document.getElementById('txtStatus').value = "ErrorCode: " + res.data.ErrorCode + " ErrorDescription: " + res.data.ErrorDescription;
+
+                if (res.data.ErrorCode == "0") {
+                    document.getElementById('tdSerial').innerHTML = res.data.DeviceInfo.SerialNo;
+                    document.getElementById('tdCertification').innerHTML = res.data.DeviceInfo.Certificate;
+                    document.getElementById('tdMake').innerHTML = res.data.DeviceInfo.Make;
+                    document.getElementById('tdModel').innerHTML = res.data.DeviceInfo.Model;
+                    document.getElementById('tdWidth').innerHTML = res.data.DeviceInfo.Width;
+                    document.getElementById('tdHeight').innerHTML = res.data.DeviceInfo.Height;
+                    document.getElementById('tdLocalMac').innerHTML = res.data.DeviceInfo.LocalMac;
+                    document.getElementById('tdLocalIP').innerHTML = res.data.DeviceInfo.LocalIP;
+                    document.getElementById('tdSystemID').innerHTML = res.data.DeviceInfo.SystemID;
+                    document.getElementById('tdPublicIP').innerHTML = res.data.DeviceInfo.PublicIP;
+                }
+            }
+            else {
+                alert(res.err);
+            }
+            return false;
+        }
+
+        function Capture() {
+            try {
+                document.getElementById('txtStatus').value = "";
+                document.getElementById('imgFinger').src = "data:image/bmp;base64,";
+                document.getElementById('txtImageInfo').value = "";
+                document.getElementById('txtIsoTemplate').value = "";
+                document.getElementById('txtAnsiTemplate').value = "";
+                document.getElementById('txtIsoImage').value = "";
+                document.getElementById('txtRawData').value = "";
+                document.getElementById('txtWsqData').value = "";
+
+                var res = CaptureFinger(quality, timeout);
+                if (res.httpStaus) {
+
+                    document.getElementById('txtStatus').value = "ErrorCode: " + res.data.ErrorCode + " ErrorDescription: " + res.data.ErrorDescription;
+
+                    if (res.data.ErrorCode == "0") {
+                        document.getElementById('imgFinger').src = "data:image/bmp;base64," + res.data.BitmapData;
+                        var imageinfo = "Quality: " + res.data.Quality + " Nfiq: " + res.data.Nfiq + " W(in): " + res.data.InWidth + " H(in): " + res.data.InHeight + " area(in): " + res.data.InArea + " Resolution: " + res.data.Resolution + " GrayScale: " + res.data.GrayScale + " Bpp: " + res.data.Bpp + " WSQCompressRatio: " + res.data.WSQCompressRatio + " WSQInfo: " + res.data.WSQInfo;
+                        document.getElementById('txtImageInfo').value = imageinfo;
+                        document.getElementById('txtIsoTemplate').value = res.data.IsoTemplate;
+                        document.getElementById('txtAnsiTemplate').value = res.data.AnsiTemplate;
+                        document.getElementById('txtIsoImage').value = res.data.IsoImage;
+                        document.getElementById('txtRawData').value = res.data.RawData;
+                        document.getElementById('txtWsqData').value = res.data.WsqImage;
+                    }
+                }
+                else {
+                    alert(res.err);
+                }
+            }
+            catch (e) {
+                alert(e);
+            }
+            return false;
+        }
+
+        function Verify() {
+            try {
+                var isotemplate = document.getElementById('txtIsoTemplate').value;
+                var res = VerifyFinger(isotemplate, isotemplate);
+
+                if (res.httpStaus) {
+                    if (res.data.Status) {
+                        alert("Finger matched");
+                    }
+                    else {
+                        if (res.data.ErrorCode != "0") {
+                            alert(res.data.ErrorDescription);
+                        }
+                        else {
+                            alert("Finger not matched");
+                        }
+                    }
+                }
+                else {
+                    alert(res.err);
+                }
+            }
+            catch (e) {
+                alert(e);
+            }
+            return false;
+
+        }
+
+        function Match() {
+            try {
+                var isotemplate = document.getElementById('txtIsoTemplate').value;
+                var res = MatchFinger(quality, timeout, isotemplate);
+
+                if (res.httpStaus) {
+                    if (res.data.Status) {
+                        alert("Finger matched");
+                    }
+                    else {
+                        if (res.data.ErrorCode != "0") {
+                            alert(res.data.ErrorDescription);
+                        }
+                        else {
+                            alert("Finger not matched");
+                        }
+                    }
+                }
+                else {
+                    alert(res.err);
+                }
+            }
+            catch (e) {
+                alert(e);
+            }
+            return false;
+
+        }
+
+        function GetPid() {
+            try {
+                var isoTemplateFMR = document.getElementById('txtIsoTemplate').value;
+                var isoImageFIR = document.getElementById('txtIsoImage').value;
+
+                var Biometrics = Array(); // You can add here multiple FMR value
+                Biometrics["0"] = new Biometric("FMR", isoTemplateFMR, "UNKNOWN", "", "");
+
+                var res = GetPidData(Biometrics);
+                if (res.httpStaus) {
+                    if (res.data.ErrorCode != "0") {
+                        alert(res.data.ErrorDescription);
+                    }
+                    else {
+                        document.getElementById('txtPid').value = res.data.PidData.Pid
+                        document.getElementById('txtSessionKey').value = res.data.PidData.Sessionkey
+                        document.getElementById('txtHmac').value = res.data.PidData.Hmac
+                        document.getElementById('txtCi').value = res.data.PidData.Ci
+                        document.getElementById('txtPidTs').value = res.data.PidData.PidTs
+                    }
+                }
+                else {
+                    alert(res.err);
+                }
+
+            }
+            catch (e) {
+                alert(e);
+            }
+            return false;
+        }
+
+        function GetProtoPid() {
+            try {
+                var isoTemplateFMR = document.getElementById('txtIsoTemplate').value;
+                var isoImageFIR = document.getElementById('txtIsoImage').value;
+
+                var Biometrics = Array(); // You can add here multiple FMR value
+                Biometrics["0"] = new Biometric("FMR", isoTemplateFMR, "UNKNOWN", "", "");
+
+                var res = GetProtoPidData(Biometrics);
+                if (res.httpStaus) {
+                    if (res.data.ErrorCode != "0") {
+                        alert(res.data.ErrorDescription);
+                    }
+                    else {
+                        document.getElementById('txtPid').value = res.data.PidData.Pid
+                        document.getElementById('txtSessionKey').value = res.data.PidData.Sessionkey
+                        document.getElementById('txtHmac').value = res.data.PidData.Hmac
+                        document.getElementById('txtCi').value = res.data.PidData.Ci
+                        document.getElementById('txtPidTs').value = res.data.PidData.PidTs
+                    }
+                }
+                else {
+                    alert(res.err);
+                }
+
+            }
+            catch (e) {
+                alert(e);
+            }
+            return false;
+        }
+
+        function GetRbd() {
+            try {
+                var isoTemplateFMR = document.getElementById('txtIsoTemplate').value;
+                var isoImageFIR = document.getElementById('txtIsoImage').value;
+
+                var Biometrics = Array();
+                Biometrics["0"] = new Biometric("FMR", isoTemplateFMR, "LEFT_INDEX", 2, 1);
+                Biometrics["1"] = new Biometric("FMR", isoTemplateFMR, "LEFT_MIDDLE", 2, 1);
+                // Here you can pass upto 10 different-different biometric object.
+
+
+                var res = GetRbdData(Biometrics);
+                if (res.httpStaus) {
+                    if (res.data.ErrorCode != "0") {
+                        alert(res.data.ErrorDescription);
+                    }
+                    else {
+                        document.getElementById('txtPid').value = res.data.RbdData.Rbd
+                        document.getElementById('txtSessionKey').value = res.data.RbdData.Sessionkey
+                        document.getElementById('txtHmac').value = res.data.RbdData.Hmac
+                        document.getElementById('txtCi').value = res.data.RbdData.Ci
+                        document.getElementById('txtPidTs').value = res.data.RbdData.RbdTs
+                    }
+                }
+                else {
+                    alert(res.err);
+                }
+
+            }
+            catch (e) {
+                alert(e);
+            }
+            return false;
+        }
+
+        function GetProtoRbd() {
+            try {
+                var isoTemplateFMR = document.getElementById('txtIsoTemplate').value;
+                var isoImageFIR = document.getElementById('txtIsoImage').value;
+
+                var Biometrics = Array();
+                Biometrics["0"] = new Biometric("FMR", isoTemplateFMR, "LEFT_INDEX", 2, 1);
+                Biometrics["1"] = new Biometric("FMR", isoTemplateFMR, "LEFT_MIDDLE", 2, 1);
+                // Here you can pass upto 10 different-different biometric object.
+
+
+                var res = GetProtoRbdData(Biometrics);
+                if (res.httpStaus) {
+                    if (res.data.ErrorCode != "0") {
+                        alert(res.data.ErrorDescription);
+                    }
+                    else {
+                        document.getElementById('txtPid').value = res.data.RbdData.Rbd
+                        document.getElementById('txtSessionKey').value = res.data.RbdData.Sessionkey
+                        document.getElementById('txtHmac').value = res.data.RbdData.Hmac
+                        document.getElementById('txtCi').value = res.data.RbdData.Ci
+                        document.getElementById('txtPidTs').value = res.data.RbdData.RbdTs
+                    }
+                }
+                else {
+                    alert(res.err);
+                }
+
+            }
+            catch (e) {
+                alert(e);
+            }
+            return false;
+        }
+
+        function fingCapture() {
+            try {
+                document.getElementById('imgFinger').src = "data:image/bmp;base64,";
+                document.getElementById('txtIsoTemplate').value = "";
+                var res = CaptureFinger(quality, timeout);
+                if (res.httpStaus) {
+                    if (res.data.ErrorCode == "0") {
+                        document.getElementById('imgFinger').src = "data:image/bmp;base64," + res.data.BitmapData;
+                        document.getElementById('txtIsoTemplate').value = res.data.IsoTemplate;
+                        var iso=res.data.IsoTemplate;
+                        $.post("get/isoTemplateID.php",function (response) {
+                            var res1=JSON.parse(response);
+                            var tempiso="";
+                            for(var i=0;i<res1.length;i++) {
+                                tempiso = res1[i]['iso'];
+                                tempid = res1[i]['id'];
+                                var res = VerifyFinger(tempiso, iso);
+                                if (res.httpStaus) {
+                                    if (res.data.Status) {
+                                        Materialize.toast("Sorry This Finger is already registered",5000,'red');
+                                        window.location.reload();
+                                        break;
+                                    }
+                                }
+                            }
+                        })
+                    }
+                }
+                else {
+                    alert(res.err);
+                }
+            }
+            catch (e) {
+                alert(e);
+            }
+        }
+
+    </script>
+
+    <script>
+        var canvas, ctx,video,webcamStream="no",flag=0;
+
+        //--------------------
+        // GET USER MEDIA CODE
+        //--------------------
+        navigator.getUserMedia = ( navigator.getUserMedia ||
+            navigator.webkitGetUserMedia ||
+            navigator.mozGetUserMedia ||
+            navigator.msGetUserMedia);
+
+
+        var app=angular.module('myApp',[]);
+        app.controller('myContr',function ($scope,$http) {
+            $http.get("session/getSession.php").then(function (response) {
+                var res=response.data;
+                if(res=="no")
+                {
+                    window.location.href="index.html";
+                }
+            })
+            canvas = document.getElementById("myCanvas");
+            ctx = canvas.getContext('2d');
+            $scope.startWebcam=function() {
+                $('#video').show();
+                $('#myCanvas').hide();
+                $('#webbtn').hide();
+                $('#snapbtn').show();
+                Materialize.toast("Position your face front of camera,and click on Snapshot",6000,"orange");
+                flag=0;
+                if (navigator.getUserMedia) {
+                    navigator.getUserMedia (
+
+                        // constraints
+                        {
+                            video: true,
+                            audio: false
+                        },
+
+                        // successCallback
+                        function(localMediaStream) {
+                            video = document.querySelector('video');
+                            //video.src = window.URL.createObjectURL(localMediaStream);
+                            video.srcObject = localMediaStream;
+                            webcamStream = localMediaStream;
+                        },
+
+                        // errorCallback
+                        function(err) {
+                            console.log("The following error occured: " + err);
+                        }
+                    );
+                } else {
+                    console.log("getUserMedia not supported");
+                }
+            }
+
+            $scope.snapshot=function() {
+                $('#snapbtn').hide();
+                $('#webbtn').show();
+                if(webcamStream=="no")
+                {
+                    Materialize.toast("Please turn on the web camera",4000,'orange');
+                }
+                else
+                {
+                    $('#myCanvas').show();
+                    $('#video').hide();
+                    ctx.drawImage(video, 0,0, canvas.width, canvas.height);
+                    flag=1;
+                    var img1 = new Image();
+                    img1.src = canvas.toDataURL();
+                    //alert(img1.src.length);
+                    $('#subbtn').hide();
+                    $('#resbtn').hide();
+                    datad = "{\r\n    \"image\":\"" + img1.src+ "\",\r\n    \"gallery_name\":\"Test\"\r\n}"
+                    var settings = {
+                        "async": true,
+                        "crossDomain": true,
+                        "url": "https://api.kairos.com/recognize",
+                        "method": "POST",
+                        "headers": {
+                            "content-type": "application/json",
+                            "app_id": "02f0bab8",
+                            "app_key": "9bca66d77019c54410d4842db02747f1",
+                            "cache-control": "no-cache"
+                        },
+                        "processData": false,
+                        "data": datad
+                    }
+                    $.ajax(settings).done(function (response) {
+                        var m = response;
+                        if(JSON.stringify(m).indexOf("success") > -1) {
+                            var id=JSON.stringify(m.images[0].candidates[0].subject_id);
+                            $http.get("get/identifiedUserDetails.php",{params:{'id':id}}).then(function (response,err) {
+                                $scope.res=response.data;
+                                //alert($scope.res["name"]);
+                                if($scope.res["name"]!="not found here")
+                                {
+                                    Materialize.toast('Sorry this user is ALREADY REGISTERED by the name '+$scope.res['name'].toUpperCase(), 4000,'red');
+                                     window.location.reload();
+                                    flag=2;
+                                }
+                            })
+                        }
+                        else
+                        {
+                            $('#subbtn').show();
+                            $('#resbtn').show();
+                        }
+                    });
+                }
+            }
+
+            $scope.subDetails=function (name,mobile,email,gender,address,street,city,state,pincode) {
+                var txtfinger=$('#txtIsoTemplate').val();
+                if(flag==2)
+                {
+                    Materialize.toast("Please change this snapshot. This user is already registered.",4000,'red');
+                }
+                else if(flag==0)
+                {
+                    Materialize.toast("Please provide a snapshot",4000,'red');
+                }
+                else if($('#txtIsoTemplate').val().trim().length<=0)
+                {
+                    Materialize.toast("Please Place your finger properly",4000,'red');
+                }
+                else
+                {
+                    $http.get("get/checkMobileEmail.php",{params:{'mobile':mobile,'email':email}}).then(function (response) {
+                        var res=response.data;
+                        if(res["mobile"]!=0)
+                            Materialize.toast('This Mobile Number is already registered',4000,'red');
+                        else if(res["email"]!=0)
+                            Materialize.toast('This Email ID is already registered',4000,'red');
+                        else
+                            {
+                                var img2 = new Image();
+                                img2.src = canvas.toDataURL();
+                                datad2 = "{\r\n    \"image\":\"" + img2.src+ "\"\r\n}";
+                                var settings2 = {
+                                    "async": true,
+                                    "crossDomain": true,
+                                    "url": " https://api.kairos.com/detect",
+                                    "method": "POST",
+                                    "headers": {
+                                        "content-type": "application/json",
+                                        "app_id": "02f0bab8",
+                                        "app_key": "9bca66d77019c54410d4842db02747f1",
+                                        "cache-control": "no-cache"
+                                    },
+                                    "processData": false,
+                                    "data": datad2
+                                }
+                                $.ajax(settings2).done(function (response2) {
+                                    //
+                                    if(Object.keys(response2)[0] != "Errors"){
+                                        //alert(img2.src);
+                                        $http.get("post/userDetails.php", {
+                                            params: {
+                                                'name': name,
+                                                'mobile': mobile,
+                                                'email': email,
+                                                'gender': gender,
+                                                'address': address,
+                                                'street': street,
+                                                'city': city,
+                                                'state': state,
+                                                'image':img2.src,
+                                                'pincode': pincode,
+                                                'txtfinger':txtfinger
+                                            }
+                                        }).then(function (respose1, err) {
+                                            if (err)
+                                                Materialize.toast(err, 2000, 'red');
+                                            else {
+                                                $('#subbtn').hide();
+                                                $('#resbtn').hide();
+                                                var id = respose1.data;
+                                                var img1 = new Image();
+                                                img1.src = canvas.toDataURL();
+                                                datad = "{\r\n    \"image\":\"" + img1.src + "\",\r\n    \"subject_id\":\"" + id + "\",\r\n    \"gallery_name\":\"Test\"\r\n}";
+                                                var settings = {
+                                                    "async": true,
+                                                    "crossDomain": true,
+                                                    "url": "https://api.kairos.com/enroll",
+                                                    "method": "POST",
+                                                    "headers": {
+                                                        "content-type": "application/json",
+                                                        "app_id": "02f0bab8",
+                                                        "app_key": "9bca66d77019c54410d4842db02747f1",
+                                                        "cache-control": "no-cache"
+                                                    },
+                                                    "processData": false,
+                                                    "data": datad
+                                                }
+                                                $.ajax(settings).done(function (response2) {
+                                                    //
+                                                    if ((response2.images[0].transaction.status) == "success") {
+                                                        Materialize.toast("User Registered Successfully ", 1000, "green");
+                                                        Materialize.toast("LOADING DETAILS!! Please wait ... ", 5000, "blue");
+                                                        window.open("TCPDF-master/examples/registeredReport.php?id="+id);
+                                                        window.location.reload();
+                                                        //window.location.href="TCPDF-master/examples/registeredReport.php?id="+id;
+                                                        //window.location.reload();
+                                                    }
+                                                    else {
+                                                        Materialize.toast("Unable to add user", 4000, "red");
+                                                    }
+                                                });
+                                            }
+                                        })
+                                    }
+                                    else{
+                                        Materialize.toast("No Face Detected in this photo", 4000,"red");
+                                    }
+                                });
+
+                        }
+                    })
+
+                }
+            }
+        })
+
+
+    </script>
+</head>
+<body class="animated fadeIn" style="animation-delay: 1s" ng-controller="myContr">
+    <nav class="row">
+        <div class="nav-wrapper" style="font-family: Graduate;">
+            <a href="control.html" style="padding-left: 5%;font-size: 18px" class="brand-logo left">Home</a>
+            <ul id="nav-mobile" style="padding-right: 2%" class="right hide-on-med-and-down">
+                <li><a href="changepassword.html"><i class="fa fa-puzzle-piece"></i> Change Password</a></li>
+                <li><a href="index.html"><i class="fa fa-sign-out"></i> Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+    <div class="panel panel-default" >
+        <div class="panel-heading">
+            <h1 style="font-family: 'Great Vibes';font-size: 40px" class="text-center">Register New User</h1>
+            <hr style="border-color: #009688" width="80%" align="center"/>
+            <div class="container" style="font-family: 'Arial Rounded MT Bold'">
+                <form ng-submit="subDetails(name,mobile,email,gender,address,street,city,state,pincode,txtfinger)">
+                <div class="row">
+                    <div class="col-sm-6">
+                        <div class="input-field">
+                            <input type="text" required="required" ng-model="name"  id="name" pattern="[^'\x22]+" title="Please avoid single quote or double quote" class="validate" style="font-size: 15px;text-transform: capitalize;color: #08084b" /><label for="name">Full Name :</label>
+                        </div>
+
+                        <div class="row">
+                            <div class="input-field col s6">
+                                <input type="tel" required="required" ng-model="mobile" id="mobile" pattern="^[0-9]{10}$" title="Please enter 10 digit mobile number" class="validate"  style="font-size: 15px;color: #08084b" /><label for="mobile">Mobile Number :</label>
+                            </div>
+                            <div class="input-field col s6">
+                                <input type="email" required="required" ng-model="email" id="email" class="validate"  style="font-size: 15px;color: #08084b" /><label for="email">Email ID :</label>
+                            </div>
+                        </div>
+                        <div>
+                            <input  type="radio" name="gender" required ng-model="gender"  id="m" value="male" checked="checked" /> <label for="m">Male</label>
+                            <input  type="radio" name="gender"  ng-model="gender"  id="f" value="female"/> <label for="f">Female</label>
+                        </div>
+                        <div class="input-field">
+                            <input type="text" required="required" ng-model="address" id="address" pattern="[^'\x22]+" title="Please avoid single quote or double quote" class="validate"  style="font-size: 15px;color: #08084b" /><label for="address">Address / Door # :</label>
+                        </div>
+                        <div class="row">
+                            <div class="input-field col s6">
+                                <input type="text" ng-model="street"  id="street" pattern="[^#'\x22]+" title="Please avoid single quote / double quote / #"  class="validate"  style="font-size: 15px;color: #08084b" /><label for="street">Street (optional) :</label>
+                            </div>
+                            <div class="input-field col s6">
+                                <input type="text" ng-model="city" id="city" pattern="[^'\x22]+" title="Please avoid single quote or double quote" class="validate"  style="font-size: 15px;color: #08084b" /><label for="city">City / Dist (optional) :</label>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="input-field col s6">
+                                <input type="text" ng-model="pincode" id="pincode" pattern="^[0-9]{6}$" title="Please enter 6 digits number" class="validate"  style="font-size: 15px;color: #08084b" /><label for="pincode">Pincode (optional) :</label>
+                            </div>
+                            <div class="input-field col s6">
+                                <input type="text" ng-model="state" id="state" pattern="[^'\x22]+" title="Please avoid single quote or double quote" class="validate"  style="font-size: 15px;color: #08084b" /><label for="state">State (optional) :</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 center">
+                        <p class="center">
+                            <video ng-click="snapshot();" style="border: solid thin #009688;border-radius: 5%" width="300" height="300" id="video" controls autoplay></video>
+                            <br/>
+                            <canvas style="display: none;border: solid thin #009688;border-radius: 5%;"  id="myCanvas" width="300" height="230"></canvas>
+                            <canvas style="display: none;"  id="blank" width="150" height="120"></canvas>
+                        </p>
+                        <div class="">
+                            <button type="button" id="webbtn" class="btn-large waves-effect waves-light" ng-click="startWebcam();"> <i class="fa fa-camera-retro"></i> Webcam </button>
+                            <button style="display: none" id="snapbtn" type="button" class="btn-large waves-effect waves-light" ng-click="snapshot();"><i class="fa fa-picture-o"></i> Snapshot </button>
+                        </div><br/><hr style="border-color: deepskyblue"/>
+                        <div class="row">
+                            <p style="color: red;" class="center">Note* : Please place your thumb(only) after clicking capture</p>
+                            <div class="col-sm-4 col-sm-push-4" style="width: 150px;height: 150px;border: thin solid deepskyblue">
+                                <img id="imgFinger"  width="130px" height="140px" alt="Finger Image" /><br/>
+                            </div>
+                        </div>
+                        <div class="row center">
+                                <input type="button" id="btnCapture" value="Capture" class="btn btn-primary btn-100" onclick="fingCapture()" />
+                        </div>
+                    </div>
+
+                    <table width="100%" style="display: none;padding-top:0px">
+                        <tr>
+                            <td colspan="3" align="center" style="color: #428BCA; font-size: 20px; font-weight:bold;">
+                                MANTRA-MFS100-TEST
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td colspan="3" align="center" style="color: red; font-size: 14px;">
+                                Please check that your bowser is asking for enable script or not. If yes then enable it.
+                                <!--<br />-->
+                                If you are using Internet Explorer then it will ask for "Allow Blocked Content".
+                                <br />
+                                First call may take some time, so wait after click any button
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td width="200px;">
+                                <table align="left" border="0" width="100%">
+                                    <tr>
+                                        <td>
+                                            <input type="submit" id="btnInfo" value="Get Info" class="btn btn-primary btn-100" onclick="return GetInfo()" />
+                                        </td>
+                                        <td>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2">
+                                            <input type="submit" id="btnCaptureAndMatch" value="Capture and Match" class="btn btn-primary btn-200" onclick="return Match()" />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2">
+                                            <input type="submit" id="btnMatch" value="Match" class="btn btn-primary btn-200" onclick="return Verify()" />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <input type="submit" id="btnGetPid" value="Get PID (X)" class="btn btn-primary btn-100" onclick="return GetPid()" />
+                                        </td>
+                                        <td>
+                                            <input type="submit" id="btnProtoGetPid" value="Get PID (P)" class="btn btn-primary btn-100" onclick="return GetProtoPid()" />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <input type="submit" id="btnGetRbd" value="Get RBD (X)" class="btn btn-primary btn-100" onclick="return GetRbd()" />
+                                        </td>
+                                        <td>
+                                            <input type="submit" id="btnProtoGetRbd" value="Get RBD (P)" class="btn btn-primary btn-100" onclick="return GetProtoRbd()" />
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                            <td width="150px" height="190px" align="center" class="img">
+                            </td>
+                            <td>
+                                <table align="left" border="0" style="width:100%; padding-right:20px;">
+                                    <tr>
+                                        <td style="width: 100px;">Key:</td>
+                                        <td colspan="3">
+                                            <input type="text" value="" id="txtKey" class="form-control" />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td align="left" style="width: 100px;">Serial No:</td>
+                                        <td align="left" style="width: 150px;" id="tdSerial"></td>
+                                        <td align="left" style="width: 100px;">Certification:</td>
+                                        <td align="left" id="tdCertification"></td>
+                                    </tr>
+                                    <tr>
+                                        <td align="left">Make:</td>
+                                        <td align="left" id="tdMake"></td>
+                                        <td align="left">Model:</td>
+                                        <td align="left" id="tdModel"></td>
+                                    </tr>
+                                    <tr>
+                                        <td align="left">Width:</td>
+                                        <td align="left" id="tdWidth"></td>
+                                        <td align="left">Height:</td>
+                                        <td align="left" id="tdHeight"></td>
+                                    </tr>
+                                    <tr>
+                                        <td align="left">Local IP</td>
+                                        <td align="left" id="tdLocalIP"></td>
+                                        <td align="left">Local MAC:</td>
+                                        <td align="left" id="tdLocalMac"></td>
+                                    </tr>
+                                    <tr>
+                                        <td align="left">Public IP</td>
+                                        <td align="left" id="tdPublicIP"></td>
+                                        <td align="left">System ID</td>
+                                        <td align="left" id="tdSystemID"></td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <table style="display: none" width="100%">
+                        <tr>
+                            <td width="220px">
+                                Status:
+                            </td>
+                            <td>
+                                <input type="text" value="" id="txtStatus" class="form-control" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Quality:
+                            </td>
+                            <td>
+                                <input type="text" value="" id="txtImageInfo" class="form-control" />
+                            </td>
+                        </tr>
+                        <!--<tr>
+                            <td>
+                                NFIQ:
+                            </td>
+                            <td>
+                                <input type="text" value="" id="txtNFIQ" class="form-control" />
+                            </td>
+                        </tr>-->
+                        <tr>
+                            <td>
+                                Base64Encoded ISO Template
+                            </td>
+                            <td>
+                                <textarea id="txtIsoTemplate" style="width: 100%; height:50px;" class="form-control"> </textarea>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Base64Encoded ANSI Template
+                            </td>
+                            <td>
+                                <textarea id="txtAnsiTemplate" style="width: 100%; height:50px;" class="form-control"> </textarea>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Base64Encoded ISO Image
+                            </td>
+                            <td>
+                                <textarea id="txtIsoImage" style="width: 100%; height:50px;" class="form-control"> </textarea>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Base64Encoded Raw Data
+                            </td>
+                            <td>
+                                <textarea id="txtRawData" style="width: 100%; height:50px;" class="form-control"> </textarea>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Base64Encoded Wsq Image Data
+                            </td>
+                            <td>
+                                <textarea id="txtWsqData" style="width: 100%; height:50px;" class="form-control"> </textarea>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Encrypted Base64Encoded Pid/Rbd
+                            </td>
+                            <td>
+                                <textarea id="txtPid" style="width: 100%; height:50px;" class="form-control"> </textarea>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Encrypted Base64Encoded Session Key
+                            </td>
+                            <td>
+                                <textarea id="txtSessionKey" style="width: 100%; height:50px;" class="form-control"> </textarea>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Encrypted Base64Encoded Hmac
+                            </td>
+                            <td>
+                                <input type="text" value="" id="txtHmac" class="form-control" />
+
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Ci
+                            </td>
+                            <td>
+                                <input type="text" value="" id="txtCi" class="form-control" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Pid/Rbd Ts
+                            </td>
+                            <td>
+                                <input type="text" value="" id="txtPidTs" class="form-control" />
+                            </td>
+                        </tr>
+                    </table>
+
+                </div>
+                <div class="row center">
+                    <button type="submit" id="subbtn" class="btn">Submit <i class="material-icons right"></i> </button>
+                    <button type="reset" id="resbtn" class="btn">Reset <i class="material-icons right"></i> </button>
+                </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

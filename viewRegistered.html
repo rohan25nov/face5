@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="myApp">
+<head>
+    <meta charset="UTF-8">
+    <title>View Registered Users</title>
+    <link rel="stylesheet" href="include/bootstrap.min.css">
+    <link rel="stylesheet" href="include/animate.css">
+    <link rel="stylesheet" href="include/materialize.css">
+    <link rel="stylesheet" href="include/googlepis.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css">
+    <style>
+        .popup1 {
+            width: 33.333333%;
+            padding: 15px;
+            left: 0;
+            margin-left: 33.333333%;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            background: white;
+            position: absolute;
+            top: -100%;
+            box-shadow: 5px 5px 5px #000;
+            z-index: 10001;
+        }
+    </style>
+    <script src="include/jquery.min.js"></script>
+    <script src="include/angular.min.js"></script>
+    <script src="include/materialize.js"></script>
+
+    <script>
+        var app=angular.module('myApp',[]);
+        app.controller('myContr',function ($scope,$http) {
+            $http.get("session/getSession.php").then(function (response) {
+                var res=response.data;
+                if(res=="no")
+                {
+                    window.location.href="index.html";
+                }
+            });
+            $scope.initial=function(){
+                $http.get("get/allUserDetails.php").then(function (response) {
+                    $scope.users=response.data;
+                });
+            }
+            $scope.initial();
+
+            $scope.showPopup1=function(id)
+            {
+                $scope.curId=id;
+                $('.popup1').animate({top: '30%'}, 300);
+            }
+            $scope.cancel=function()
+            {
+                $('.popup1').animate({top: '-100%'}, 300);
+            }
+            $scope.delete=function () {
+                $('.popup1').animate({top: '-100%'}, 300);
+                var id=$scope.curId;
+                    datad = "{\r\n    \"subject_id\":\"" + id + "\",\r\n    \"gallery_name\":\"Test\"\r\n}"
+                    var settings = {
+                        "async": true,
+                        "crossDomain": true,
+                        "url": " https://api.kairos.com/gallery/remove_subject",
+                        "method": "POST",
+                        "headers": {
+                            "content-type": "application/json",
+                            "app_id": "02f0bab8",
+                            "app_key": "9bca66d77019c54410d4842db02747f1",
+                            "cache-control": "no-cache"
+                        },
+                        "processData": false,
+                        "data": datad
+                    }
+                    $.ajax(settings).done(function (response) {
+                        var m = response;
+
+                        if(JSON.stringify(m).indexOf("Complete") > -1) {
+                            $http.get("delete/userByID.php",{params:{'id':id}}).then(function (response1) {
+                                Materialize.toast(response1.data,3000,'green');
+                                $scope.initial();
+                            });
+                        }
+                        else{
+                            Materialize.toast('User cannot be deleted',3000,'red');
+                        }
+                    });
+
+            }
+        })
+
+    </script>
+</head>
+<body id="cont" class="animated fadeIn" style="animation-delay: 1s;" ng-controller="myContr">
+<div class="popup1">
+    <p>Do you really want to DELETE?</p>
+    <div class="text-right">
+        <button class="btn btn-cancel" ng-click="cancel()">Cancel</button>
+        <button class="btn" style="background-color: #111155;color: white;font-weight: bold" ng-click="delete()">Ok</button>
+    </div>
+</div>
+<nav>
+    <div class="nav-wrapper" style="font-family: Graduate;">
+        <a href="control.html" style="padding-left: 5%;font-size: 18px" class="brand-logo left">Home</a>
+        <ul id="nav-mobile" style="padding-right: 2%" class="right hide-on-med-and-down">
+            <li><a href="changepassword.html"><i class="fa fa-puzzle-piece"></i> Change Password</a></li>
+            <li><a href="index.html"><i class="fa fa-sign-out"></i> Logout</a></li>
+        </ul>
+    </div>
+</nav>
+<div class="panel" style="padding-top: 2%;">
+    <div class="panel-heading" style="background-color: #cccccc">
+        <h1 style="font-family: 'Great Vibes';font-size: 45px;font-weight: bold" class="text-center">Registered Users</h1>
+        <hr style="border-color: #009688" width="80%" align="center"/>
+        <div class="container">
+            <div class="row">
+                <div class="input-field col s6">
+                    <i class="fa fa-search prefix"></i>
+                    <input type="text" id="serach" ng-model="search" style="font-size: 13px;font-weight: bold" /><label for="serach" style="font-size: 13px;font-weight: bold;">Search user by Name / Mobile number / Email etc  </label>
+                </div>
+                <div class="col s6">
+
+                </div>
+            </div>
+        </div>
+        <div style="padding: 3%;font-size: 10px">
+                <table class="highlight responsive-table bordered">
+                    <tr style="background-color: #eeeeee">
+                        <th width="3%">No</th>
+                        <th width="20%">Name</th>
+                        <th width="8%">Mobile No</th>
+                        <th width="22%">Email</th>
+                        <th width="7%">Gender</th>
+                        <th width="30%">Address</th>
+                        <th width="10%">Action</th>
+                    </tr>
+                    <tr ng-repeat="user in users|filter:search">
+                        <th>{{user.no}}</th>
+                        <th>{{user.name|uppercase}}</th>
+                        <th>{{user.mobile}}</th>
+                        <th>{{user.email}}</th>
+                        <th>{{user.gender}}</th>
+                        <th>{{user.caddress}}</th>
+                        <th><i style="color: red;cursor: pointer" title="Delete" ng-click="showPopup1(user.id)" class="fa fa-2x fa-trash-o"></i></th>
+                    </tr>
+                </table>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

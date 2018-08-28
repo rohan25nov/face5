@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="myApp">
+<head>
+    <meta charset="UTF-8">
+    <title>Control Page</title>
+    <link rel="stylesheet" href="include/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="include/googlepis.css">
+    <link rel="stylesheet" href="include/animate.css">
+    <link rel="stylesheet" href="include/materialize.css">
+    <script src="include/jquery.min.js"></script>
+    <script src="include/angular.min.js"></script>
+    <script>
+        var app=angular.module('myApp',[]);
+        app.controller('myContr',function ($scope,$http) {
+
+            $http.get("session/getSession.php").then(function (response) {
+                var res=response.data;
+                if(res=="no")
+                {
+                    window.location.href="index.html";
+                }
+            })
+        });
+    </script>
+    <script>
+        function anifun(id)
+        {
+            $('.'+id).addClass("animated bounce");
+        }
+        function anifun1(id)
+        {
+            $('.'+id).removeClass("animated bounce");
+        }
+    </script>
+</head>
+<body style="background-color: #4db6ac;animation-delay: 2s;" ng-controller="myContr" class="animated fadeIn">
+    <nav class="row">
+        <div class="nav-wrapper" style="font-family: Graduate;">
+            <span width="90%" style="padding-left: 5%;font-size: 20px" class="brand-logo left"><img src="img/back7.jpg" height="30" width="50"> COMPANY NAME</span>
+            <ul id="nav-mobile" style="padding-right: 2%" class="right hide-on-med-and-down">
+                <li><a href="changepassword.html"><i class="fa fa-puzzle-piece"></i> Change Password</a></li>
+                <li><a href="index.html"><i class="fa fa-sign-out"></i> Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+    <div class="container" style="background-color: #009688;margin-top: 3%;border-radius: 2%">
+        <div  style="padding: 2%;">
+            <h1 style="font-family: 'Great Vibes';font-weight: 900;color: white;text-align: center;font-size: 50px;">Find Your Task</h1>
+            <table width="100%"  border="2" style="border-color: white;"  >
+                <tr>
+                    <td style="text-align: center;"><a href="registerNewUser.html" style="color: white">
+                        <img src="img/hpicnew2.png" height="120" width="120" class="img-circle aa1" style="box-shadow: 0 6px 10px rgba(0, 0, 0, 0.5);" onmouseover="anifun('aa1')" onmouseout="anifun1('aa1')"><br/>
+                        <span style="font-size:20px;font-weight: bold;font-family: Play">Register New Members</span>
+                    </a>
+                    </td>
+                    <td style="text-align: center;"><a href="viewRegistered.html" style="color: white">
+                        <img src="img/group.jpg" height="120" width="120" class="img-circle aa2" style="box-shadow: 0 6px 10px rgba(0, 0, 0, 0.5);" onmouseover="anifun('aa2')" onmouseout="anifun1('aa2')"><br/>
+                        <span style="font-size:20px;font-weight: bold;font-family: Play">View Registered Members</span>
+                    </a>
+                    </td>
+                    <td style="text-align: center;"><a href="getUserDetails.html" style="color: white">
+                        <img src="img/hpic8.png" height="120" width="120" class="img-circle aa3" style="box-shadow: 0 6px 10px rgba(0, 0, 0, 0.5);" onmouseover="anifun('aa3')" onmouseout="anifun1('aa3')"><br/>
+                        <span style="font-size:20px;font-weight: bold;font-family: Play">Get User Details</span>
+                    </a>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</body>
+</html>
